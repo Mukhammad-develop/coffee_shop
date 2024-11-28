@@ -3,4 +3,5 @@ djangorestframework
 drf-yasg
 psycopg2
 djangorestframework-simplejwt
+psycopg2-binary
 # channels>=4.0.0

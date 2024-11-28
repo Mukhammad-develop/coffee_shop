@@ -6,6 +6,7 @@ router = DefaultRouter()
 router.register('products', ProductViewSet, basename='product')
 router.register('orders', OrderViewSet, basename='order')
 router.register('categories', CategoryViewSet, basename='category')
+router.register('cart', CartViewSet, basename='cart')
 
 urlpatterns = [
     path('me/', current_user, name='current_user'),
