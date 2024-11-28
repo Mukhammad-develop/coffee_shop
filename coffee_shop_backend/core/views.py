@@ -7,10 +7,96 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import viewsets, permissions, status, generics
 from .models import *
 from .serializers import *
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 
 User = get_user_model()
+
+class RegistrationView(APIView):
+    """
+    Handles user registration.
+    """
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        if not email or not password:
+            return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(email=email).exists():
+            return Response({"error": "Email is already registered."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.create(
+            email=email,
+            password=make_password(password),
+            is_verified=False  # Assume verification is required
+        )
+        return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
+
+
+class AuthenticationView(APIView):
+    """
+    Handles user authentication and provides JWT tokens.
+    """
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        try:
+            user = User.objects.get(email=email)
+            if not user.check_password(password):
+                raise Exception("Invalid credentials")
+
+            if not user.is_verified:
+                return Response({"error": "User not verified."}, status=status.HTTP_401_UNAUTHORIZED)
+
+            # Generate tokens
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "refresh": str(refresh),
+                "access": str(refresh.access_token)
+            })
+
+        except User.DoesNotExist:
+            return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class VerificationView(APIView):
+    """
+    Handles user verification.
+    """
+    def post(self, request):
+        email = request.data.get('email')
+
+        try:
+            user = User.objects.get(email=email)
+            if user.is_verified:
+                return Response({"message": "User already verified."}, status=status.HTTP_200_OK)
+
+            # Simulate verification (e.g., via email or token)
+            user.is_verified = True
+            user.save()
+            return Response({"message": "User verified successfully."}, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class CurrentUserView(APIView):
+    """
+    Returns the current user's information.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        return Response({
+            "email": user.email,
+            "is_verified": user.is_verified
+        })
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -41,7 +127,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    
+
 class CartViewSet(viewsets.ViewSet):
     """
     A ViewSet to handle Cart and Cart Items.

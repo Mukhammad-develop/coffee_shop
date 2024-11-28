@@ -9,6 +9,9 @@ router.register('categories', CategoryViewSet, basename='category')
 router.register('cart', CartViewSet, basename='cart')
 
 urlpatterns = [
-    path('me/', current_user, name='current_user'),
+    path('registration/', RegistrationView.as_view(), name='registration'),
+    path('authentication/', AuthenticationView.as_view(), name='authentication'),
+    path('verification/', VerificationView.as_view(), name='verification'),
+    path('me/', CurrentUserView.as_view(), name='me'),
     path('', include(router.urls)),
 ]
