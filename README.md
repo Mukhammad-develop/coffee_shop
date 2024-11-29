@@ -52,7 +52,7 @@ A backend system for managing a coffee shop's operations, including user registr
 | POST   | `/registration`    | Register a new user.           |
 | POST   | `/authentication`  | Authenticate a user (JWT).     |
 | POST   | `/verification`    | Verify user identity.          |
-| GET    | `/me`              | Get current user details.      |
+| POST    | `/me`              | Get current user details.      |
 
 ## Product Management
 
